@@ -350,6 +350,7 @@ var SDPToJingle = (function() {
 								description['udp-candidates'].push(_unserializeAttributes(child));
 								description['port'] = child.getAttribute('port');
 							} else if (xmlns == XMLNS.TRANSPORT.ICE_UDP) {
+								console.log("Parsing ICE candidates");
 								description["ice-candidates"].push(_unserializeAttributes(child));
 							}
 							break;
@@ -383,7 +384,8 @@ var SDPToJingle = (function() {
 
 
 			for(var media in description) {
-				if(description.hasOwnProperty(media)) {
+				if(description.hasOwnProperty(media) && description[media] &&
+					description[media]['udp-candidates'].length) {
 					sdp += _generateMediaSdp(media, description[media]);
 				}
 				bundleSdp += " " + media;
