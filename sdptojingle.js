@@ -34,6 +34,7 @@ var SDPToJingle = (function() {
 			MID_AUDIO: "mid:audio",
 			MID_VIDEO: "mid:video",
 			RTCP_MUX: "rtcp-mux",
+			SENDRECV: "sendrecv",
 			SSRC: "ssrc",
 			CNAME: "cname",
 			MSLABEL: "mslabel",
@@ -72,7 +73,7 @@ var SDPToJingle = (function() {
 		},
 		// TODO: Remove hardcoding. This is copied from libjingle webrtcsdp.cc
 		HARDCODED_SDP_P1 = "v=0\r\no=- ",
-		HARDCODED_SDP_P2 = " 1 IN IP4 127.0.0.1\r\ns=\r\nt=0 0",
+		HARDCODED_SDP_P2 = " 1 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0",
 
 		_splitSdpMessage = function(msg) {
 			return msg.split(LINE_BREAK);
@@ -128,6 +129,9 @@ var SDPToJingle = (function() {
 				case ATTRIBUTES.RTPMAP:
 					_parseRtpMap(attrs.rtpmap, key, params);
 					break;
+				case ATTRIBUTES.SENDRECV:
+					_parseSendRecv(attrs,key);
+					break;
 				case ATTRIBUTES.SSRC:
 					// ssrc is only a string, but split ssrc: first
 					_parseSsrc(attrs.ssrc, key, params);
@@ -141,6 +145,9 @@ var SDPToJingle = (function() {
 			}
 
 			return attrs;
+		},
+		_parseSendRecv = function(attrs, params) {
+			attrs['sendrecv'] = 'sendrecv';
 		},
 		_parseSessionConnection = function(attrs, params) {
 			attrs['udp-candidates'].push({
@@ -192,7 +199,7 @@ var SDPToJingle = (function() {
 			if (ssrc[key[1]] === undefined) {
 				ssrc[key[1]] = {};
 			}
-			if (nameValue[0] == 'label') {
+			if (nameValue[0] == 'label' || nameValue[0] == 'msid') {
 				// ugly hack to circumvent the fact that DELIMITER splitting is not the best way to parse SDP.
 				// Otherwise, the label for certain cameras would be incomplete.
 				// TODO: Fix this ugly piece of code
@@ -414,6 +421,8 @@ var SDPToJingle = (function() {
 			if (description['ice-pwd']) {
 				iceStr += "a=ice-pwd:" + description['ice-pwd'] + "\r\n";
 			}
+			iceStr += "a=ice-options:google-ice\r\n"; // TODO - remove hard coding
+			iceStr += "a=sendrecv\r\n";	// TODO - remove hard coding
 
 			for (var i = 0, len = (description['ice-candidates'] ? description['ice-candidates'].length : 0); i < len; i++) {
 				var candidate = description['ice-candidates'][i],
@@ -443,9 +452,9 @@ var SDPToJingle = (function() {
 			for (var i = 0, len = (description.crypto ? description.crypto.length : 0); i < len; i++) {
 				var crypto = description.crypto[i];
 				cryptoStr += "\r\na=crypto:" + crypto.tag + " " + crypto['crypto-suite'] +
-					" " + crypto['key-params'] + " ";
-				if(crypto['session-params'].length) {
-					cryptoStr += crypto['session-params'];
+					" " + crypto['key-params'];
+				if(crypto['session-params']) {
+					cryptoStr += " " + crypto['session-params'];
 				}
 			}
 			rtpmapStr += cryptoStr;
