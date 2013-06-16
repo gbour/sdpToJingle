@@ -325,6 +325,8 @@ var SDPToJingle = (function() {
 					"ice-ufrag": "",
 					"ice-pwd": ""
 				},
+				
+				"shadow": {},
 				"sid": ""
 			};
 		},
@@ -481,11 +483,17 @@ var SDPToJingle = (function() {
 	return {
 		createJingleStanza: function(sdp) {
 			var description = _generateEmptyDescription(),
-				state = null,
+				state = "shadow",
 				sdp = _splitSdpMessage(sdp);
 			for(var i = 0, len = sdp.length; i < len; i++) {
 				state = _parseLine(description, state, sdp[i]);
 			}
+
+			for(var key in description["shadow"]) {
+				description["video"][key] = description["shadow"][key];
+				description["audio"][key] = description["shadow"][key];
+			}
+
 			return _generateJingleFromDescription(description);
 		},
 		parseJingleStanza: function(stanza) {
