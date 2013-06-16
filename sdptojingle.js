@@ -114,6 +114,7 @@ var SDPToJingle = (function() {
 			description.sid = params[1];
 		},
 		_parseMedia = function(media, params) {
+			media.defined = true;
 			media.profile = params[2];
 			media.port = params[1];
 		},
@@ -218,6 +219,10 @@ var SDPToJingle = (function() {
 			};
 		},
 		_generateMediaContent = function(name, media) {
+			if(!media.defined) {
+				return undefined;
+			};
+
 			var str = "<content creator='initiator' name='" + name + "'>",
 				i = 0, len = 0;
 
@@ -306,6 +311,8 @@ var SDPToJingle = (function() {
 		_generateEmptyDescription = function() {
 			return {
 				"audio": {
+					defined: false,
+
 					"udp-candidates": [],
 					"ice-candidates": [],
 					crypto: [],
@@ -316,6 +323,8 @@ var SDPToJingle = (function() {
 					"ice-pwd": ""
 				},
 				"video": {
+					defined: false,
+
 					"udp-candidates": [],
 					"ice-candidates": [],
 					crypto: [],
